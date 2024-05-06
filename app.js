@@ -9,7 +9,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 const bodyParser = require('body-parser');
-const basicAuth = require('basic-auth');
+const auth = require('./auth');
 const fs = require('fs');
 
 var indexRouter = require('./routes/index');
@@ -22,18 +22,6 @@ app.use(bodyParser.json());
 
 // Global Object Variable to store participants data
 const participants = {};
-
-// Basic Authentication middleware
-function auth(req, res, next) {
-  const credentials = basicAuth(req);
-  const admin = JSON.parse(fs.readFileSync('./participants.json', 'utf8')).admin;
-
-  if (!credentials || credentials.login !== admin.login || credentials.pass !== admin.password) {
-    res.status(401).json({error: 'Access Denied'})
-  } else {
-    next();
-  }
-};
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
