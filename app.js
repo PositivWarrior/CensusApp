@@ -1,3 +1,5 @@
+// app.js
+
 require('dotenv').config();
 
 var createError = require('http-errors');
@@ -12,6 +14,7 @@ const fs = require('fs');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var participantsRouter = require('./routes/participants');
 
 var app = express();
 
@@ -23,16 +26,14 @@ const participants = {};
 // Basic Authentication middleware
 function auth(req, res, next) {
   const credentials = basicAuth(req);
-  const admin = JSON.parse(fs.readFileSync('participants.json', 'utf8')).admin;
+  const admin = JSON.parse(fs.readFileSync('./participants.json', 'utf8')).admin;
 
-  if (!credentials || credentials.name !== admin.name || credentials.pass !==admin.password) {
+  if (!credentials || credentials.login !== admin.login || credentials.pass !== admin.password) {
     res.status(401).json({error: 'Access Denied'})
   } else {
     next();
   }
 };
-
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -46,6 +47,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/participants', auth, participantsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -63,8 +65,8 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running on port ${process.env.PORT}` || 3000)
-})
+// app.listen(process.env.PORT, () => {
+//   console.log(`Server is running on port ${process.env.PORT}`)
+// })
 
 module.exports = app;
