@@ -9,6 +9,10 @@ const fs = require('fs');
 const participants = {};
 
 
+router.get('/', auth, (req, res, next) => {
+    res.status(200).json(participants);
+});
+
 router.post('/add', auth, (req, res, next) => {
     const {email, firstname, lastname, dob, work, home} = req.body;
 
@@ -17,19 +21,41 @@ router.post('/add', auth, (req, res, next) => {
         return res.status(400).json({error: 'Missing required fields'});
     }
 
+    // Validate Email Format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Validate Date of Birth Format (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dob) || isNaN(new Date(dob).getTime())) {
+        return res.status(400).json({ error: 'Invalid date of birth format. Use YYYY-MM-DD' });
+    }
+
     // Check if participant already exists
     if(participants[email]) {
         return res.status(409).json({error: 'Participant already exists'});
     }
 
     // Add participant
-    participants[email] = {email, firstname, lastname, dob, work, home};
+    participants[email] = {
+        email,
+        firstname,
+        lastname,
+        dob,
+        work: {
+            companyname: work.companyname,
+            salary: work.salary,
+            currency: work.currency
+        },
+        home: {
+            country: home.country,
+            city: home.city
+        }
+    };
     res.status(201).json({message: 'Participant added successfully'});
 });
-
-router.get('/', auth, (req, res, next) => {
-    res.status(200).json(participants);
-})
 
 router.get('/details', auth, (req, res, next) => {
     const {email} = req.query;
