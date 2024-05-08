@@ -58,11 +58,25 @@ router.post('/add', auth, (req, res, next) => {
 });
 
 router.get('/details', auth, (req, res, next) => {
-    const {email} = req.query;
-    if(!participants[email]) {
-        return res.status(404).json({error: 'Participant not found'});
+    let allParticipantsDetails = [];
+
+    // Iterates over each key in the global participants object
+    for (const email in participants) {
+        if (participants.hasOwnProperty(email)) {  // Ensures the property is not from the prototype chain
+            const participant = participants[email];
+            // Pushes necessary details into an array
+            allParticipantsDetails.push({
+                email: participant.email,  // Include email if needed for reference
+                firstname: participant.firstname,
+                lastname: participant.lastname
+            });
+        }
     }
-    res.status(200).json(participants[email]);
+
+    if (allParticipantsDetails.length === 0) {
+        return res.status(404).json({ error: 'No participants found' });
+    }
+    res.status(200).json(allParticipantsDetails);
 });
 
 router.get('/details/:email', auth, (req, res, next) => {
